@@ -116,3 +116,9 @@ def RGB2SH(rgb):
 
 def SH2RGB(sh):
     return sh * C0 + 0.5
+
+def Grayscale2SH(rgb):
+    return (rgb - 0.5) / C0
+
+def SH2Grayscale(sh):
+    return sh * C0 + 0.5
