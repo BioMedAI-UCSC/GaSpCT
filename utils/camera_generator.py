@@ -35,7 +35,7 @@ def rotation_matrix_to_quaternion(R):
         q[j] = R[i,j] + R[j,i]
         q[k] = R[k,i] + R[i,k]
         q[3] = R[k,j] - R[j,k] 
-    q *= 0.5 / np.sqrt(t * R[3,3])
+    q *= 0.5 / np.sqrt(t * R[2,2])
     return q
 
 def retrieve_rotation_matrix(angle):
@@ -103,8 +103,8 @@ if __name__ == "__main__":
                         'principle_point': int(args.detector_size/2)
                     }, 
                     'extrinsics': {
-                        #'qvec': R.as_quat(Rot),
-                        'qvec': Rot.tolist(),
+                        'qvec': rotation_matrix_to_quaternion(Rot).tolist(),
+                        #'qvec': Rot.tolist(),
                         'tvec': tvec.tolist()
                     },
                     'height': args.height,
