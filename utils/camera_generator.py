@@ -6,13 +6,13 @@ import os
 import pandas as pd
 import yaml
 
-def coordinates():
+def coordinates(fov_y):
     coordinate_list = list()
     # Retrieve camera poses for each of the image
     x = r * cos(2 * pi * i / args.number_of_views)
     z = r * sin(2 * pi * i / args.number_of_views)
     phi = 2 * pi * i / args.number_of_views + pi if i < args.number_of_views / 2 else 2 * pi * i / args.number_of_views - pi
-    coords = (x, 0, z, 0, phi)
+    coords = (x, fov_y/2.0, z, 0, phi)
     coordinate_list.append(coords)
     return coordinate_list
 
@@ -69,6 +69,9 @@ if __name__ == "__main__":
     parser.add_argument("--distance_source_to_patient", "-p", default=541, type=float)
     parser.add_argument("--distance_source_to_detector", "-d", default=949, type=float)
     parser.add_argument("--detector_size", "-s", default=350, type=float)
+    parser.add_argument("--fov_x", "-x", default = 256, type=int)
+    parser.add_argument("--fov_y", "-y", default = 175, type=int)
+    parser.add_argument("--fov_z", "-z", default = 256, type=int)
     parser.add_argument("--number_of_views", "-v", default = 360, type=int)
     parser.add_argument("--height", "-he", default = 128, type=float)
     parser.add_argument("--width", "-w", default = 128, type=int)
@@ -80,8 +83,8 @@ if __name__ == "__main__":
     assert args.distance_source_to_detector > 0, f"distance of source to detector must be greater than 0, got {args.distance_source_to_detector}"
     assert args.detector_size > 0, f"detector size must be greater than 0, got {args.detector_size}"
     assert args.number_of_views > 0, f"views must be greater than 0, got {args.number_of_views}"
-    assert args.width > 0, f"detector size must be greater than 0, got {args.width}"
-    assert args.height > 0, f"views must be greater than 0, got {args.height}"
+    assert args.width > 0, f"width must be greater than 0, got {args.width}"
+    assert args.height > 0, f"height must be greater than 0, got {args.height}"
 
     os.makedirs(args.output, exist_ok=True)
 
@@ -90,7 +93,8 @@ if __name__ == "__main__":
     yaml_data = []
 
     for i in range(args.number_of_views):
-        coords = coordinates()
+        coords = coordinates(args.fov_y)
+        # print(coords)
         entry_name = "image_" + str(i+1)
         Rot = retrieve_rotation_matrix(coords[0][4])
         tvec = calculate_translation_vector(Rot, coords[0][1:4])
@@ -117,3 +121,4 @@ if __name__ == "__main__":
         #import pdb; pdb.set_trace()
 
     write_yaml(yaml_data)
+    
