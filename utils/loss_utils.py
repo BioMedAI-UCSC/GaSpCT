@@ -30,6 +30,18 @@ def create_window(window_size, channel):
     window = Variable(_2D_window.expand(channel, 1, window_size, window_size).contiguous())
     return window
 
+# For now tv_loss assumes RGB images, to be changed to grayscale
+# TODO: test the function before merging
+def tv_loss(img):
+    tv_loss = 0
+    # Calculate vertical pixel differences
+    img_diff_v = img[:-1, :, :] - img[1:, :, :]
+    tv_loss += np.sum(np.abs(img_diff_v))
+    # Calculate horizontal pixel differences
+    img_diff_h = img[:, :-1, :] - img[:, 1:, :] 
+    tv_loss += np.sum(np.abs(img_diff_h))
+    return tv_loss
+
 def ssim(img1, img2, window_size=11, size_average=True):
     channel = img1.size(-3)
     window = create_window(window_size, channel)
