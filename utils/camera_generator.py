@@ -1,12 +1,13 @@
-from math import sin, cos, asin, acos, pi, radians
+from math import sin, cos, asin, acos, pi, radians, tan
 from scipy.spatial.transform import Rotation as R
 from argparse import ArgumentParser
 import numpy as np
 import os
 import pandas as pd
 import yaml
+from graphics_utils import fov2focal
 
-def coordinates(fov_y):
+def coordinates(r, fov_y):
     coordinate_list = list()
     # Retrieve camera poses for each of the image
     x = r * cos(2 * pi * i / args.number_of_views)
@@ -62,6 +63,9 @@ def write_yaml(yaml_data):
         for line in yaml_data:
             f.write(line)
 
+def medical_to_true_fov(medical_fov, distance):
+    return 2 * tan(medical_fov / (2 * distance))
+
 
 if __name__ == "__main__":
 
@@ -69,10 +73,10 @@ if __name__ == "__main__":
     parser = ArgumentParser("Coordinate Generator")
     parser.add_argument("--distance_source_to_patient", "-p", default=541, type=float)
     parser.add_argument("--distance_source_to_detector", "-d", default=949, type=float)
-    parser.add_argument("--detector_size", "-s", default=350, type=float)
-    parser.add_argument("--fov_x", "-x", default = 256, type=int)
+    parser.add_argument("--detector_size", "-s", default=320, type=float)
+    parser.add_argument("--fov_x", "-x", default = 300, type=int)
     parser.add_argument("--fov_y", "-y", default = 175, type=int)
-    parser.add_argument("--fov_z", "-z", default = 256, type=int)
+    parser.add_argument("--fov_z", "-z", default = 300, type=int)
     parser.add_argument("--number_of_views", "-v", default = 360, type=int)
     parser.add_argument("--height", "-he", default = 128, type=float)
     parser.add_argument("--width", "-w", default = 128, type=int)
@@ -80,21 +84,24 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    assert args.distance_source_to_patient > 0, f"distance of source to patient must be greater than 0, got {args.distance_source_to_patient}"
-    assert args.distance_source_to_detector > 0, f"distance of source to detector must be greater than 0, got {args.distance_source_to_detector}"
-    assert args.detector_size > 0, f"detector size must be greater than 0, got {args.detector_size}"
-    assert args.number_of_views > 0, f"views must be greater than 0, got {args.number_of_views}"
-    assert args.width > 0, f"width must be greater than 0, got {args.width}"
+    assert args.distance_source_to_patient > 0, f"The distance from the source to patient (distance_source_to_patient) must be greater than 0, got {args.distance_source_to_patient}"
+    assert args.distance_source_to_detector > 0, f"The distance from the source to detector (distance_source_to_detector) must be greater than 0, got {args.distance_source_to_detector}"
+    assert args.detector_size > 0, f"Detector size must be greater than 0, got {args.detector_size}"
+    assert args.fov_x > 0, f"fov_x must be greater than 0, got {args.fov_x}"
+    assert args.fov_y > 0, f"fov_y must be greater than 0, got {args.fov_y}"
+    assert args.fov_z > 0, f"fov_z must be greater than 0, got {args.fov_z}"
+    assert args.number_of_views > 0, f"Number of views must be greater than 0, got {args.number_of_views}"
     assert args.height > 0, f"height must be greater than 0, got {args.height}"
+    assert args.width > 0, f"width must be greater than 0, got {args.width}"
 
     os.makedirs(args.output, exist_ok=True)
 
-    r = int(args.distance_source_to_detector/2)
+    radius = int(args.distance_source_to_detector/2)
 
     yaml_data = []
 
     for i in range(args.number_of_views):
-        coords = coordinates(args.fov_y)
+        coords = coordinates(radius, args.fov_y)
         # print(coords)
         entry_name = "image_" + str(i+1)
         Rot = retrieve_rotation_matrix(coords[0][4])
@@ -103,7 +110,8 @@ if __name__ == "__main__":
         entry = {
           entry_name: {
             'intrinsics': {
-              'focal_length': args.distance_source_to_patient,
+              'focal_length_x': fov2focal(medical_to_true_fov(args.fov_x, args.distance_source_to_patient), args.detector_size),
+              'focal_length_z': fov2focal(medical_to_true_fov(args.fov_z, args.distance_source_to_patient), args.detector_size),
               'principle_point': int(args.detector_size/2) 
             },
             'extrinsics': {
