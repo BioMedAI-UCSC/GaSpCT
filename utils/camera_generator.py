@@ -58,8 +58,9 @@ def metadata_to_intrinsics(d_source, d_patient, det_size):
     return focal_length, principle_point
 
 def write_yaml(yaml_data):
-    with open('data.yml', 'w') as outfile:
-        yaml.dump(yaml_data, outfile, default_flow_style=False)
+    with open('data.yml', 'w') as f:
+        for line in yaml_data:
+            f.write(line)
 
 
 if __name__ == "__main__":
@@ -100,23 +101,20 @@ if __name__ == "__main__":
         tvec = calculate_translation_vector(Rot, coords[0][1:4])
 
         entry = {
-            entry_name : [
-                {
-                    'intrinsics': {
-                        'focal_length': args.distance_source_to_patient,
-                        'principle_point': int(args.detector_size/2)
-                    }, 
-                    'extrinsics': {
-                        'qvec': rotation_matrix_to_quaternion(Rot).tolist(),
-                        #'qvec': Rot.tolist(),
-                        'tvec': tvec.tolist()
-                    },
-                    'height': args.height,
-                    'width': args.width
-                }
-            ]
+          entry_name: {
+            'intrinsics': {
+              'focal_length': args.distance_source_to_patient,
+              'principle_point': int(args.detector_size/2) 
+            },
+            'extrinsics': {
+              'qvec': rotation_matrix_to_quaternion(Rot).tolist(),
+              'tvec': tvec.tolist()
+            },
+            'height': args.height,
+            'width': args.width
+          }
         }
-        yaml_data.append(entry)
+        yaml_data.append(yaml.dump(entry, Dumper=yaml.Dumper))
 
         #import pdb; pdb.set_trace()
 
