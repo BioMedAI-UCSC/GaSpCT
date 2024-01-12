@@ -13,7 +13,6 @@ import torch
 import torch.nn.functional as F
 from torch.autograd import Variable
 from math import exp
-import numpy as np
 
 def l1_loss(network_output, gt):
     return torch.abs((network_output - gt)).mean()
@@ -37,10 +36,10 @@ def tv_loss(img):
     tv_loss = 0
     # Calculate vertical pixel differences
     img_diff_v = img[:-1, :, :] - img[1:, :, :]
-    tv_loss += np.sum(np.abs(img_diff_v))
+    tv_loss += torch.sum(torch.abs(img_diff_v))
     # Calculate horizontal pixel differences
     img_diff_h = img[:, :-1, :] - img[:, 1:, :] 
-    tv_loss += np.sum(np.abs(img_diff_h))
+    tv_loss += torch.sum(torch.abs(img_diff_h))
     return tv_loss
 
 def ssim(img1, img2, window_size=11, size_average=True):
