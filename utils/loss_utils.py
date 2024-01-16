@@ -42,7 +42,7 @@ def tv_loss(img):
     # Calculate horizontal pixel differences
     img_diff_h = img_norm[:, :-1, :] - img_norm[:, 1:, :] 
     tv_loss += torch.sum(torch.abs(img_diff_h))
-    tv_loss_norm = tv_loss / (img.shape[0] * img.shape[1] * img.shape[2])
+    tv_loss_norm = torch.mean(tv_loss)
     return tv_loss_norm
 
 # For now, Beta distribution loss assumes RGB images, to be changed to grayscale
