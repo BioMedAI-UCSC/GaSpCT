@@ -13,6 +13,7 @@ import torch
 import torch.nn.functional as F
 from torch.autograd import Variable
 from math import exp
+from scipy.special import gamma, gammaln
 
 def l1_loss(network_output, gt):
     return torch.abs((network_output - gt)).mean()
@@ -29,6 +30,49 @@ def create_window(window_size, channel):
     _2D_window = _1D_window.mm(_1D_window.t()).float().unsqueeze(0).unsqueeze(0)
     window = Variable(_2D_window.expand(channel, 1, window_size, window_size).contiguous())
     return window
+
+# For now, TV loss assumes RGB images, to be changed to grayscale
+# TODO: test the function before merging
+def tv_loss(img):
+    tv_loss = 0
+    img_norm = img  / 255.0
+    # Calculate vertical pixel differences
+    img_diff_v = img_norm[:-1, :, :] - img_norm[1:, :, :]
+    tv_loss += torch.sum(torch.abs(img_diff_v))
+    # Calculate horizontal pixel differences
+    img_diff_h = img_norm[:, :-1, :] - img_norm[:, 1:, :] 
+    tv_loss += torch.sum(torch.abs(img_diff_h))
+    tv_loss_norm = tv_loss / (img.shape[0] * img.shape[1] * img.shape[2])
+    return tv_loss_norm
+
+# For now, Beta distribution loss assumes RGB images, to be changed to grayscale
+def beta_loss(img, alpha=0.5, beta=0.5):
+
+  # Clamp image values to valid domain
+  img = torch.clamp(img, 1e-5, 1 - 1e-5) 
+  
+  img_alpha = img
+  img_beta = 1 - img
+
+  # Parameters
+  a = torch.tensor(alpha)
+  b = torch.tensor(beta)
+
+  # Gamma functions
+  g_a = gamma(a)
+  g_b = gamma(b)
+  g_ab = gamma(a + b)
+  
+  # Log gamma functions
+  log_g_a = gammaln(a) 
+  log_g_b = gammaln(b)
+  log_g_ab = gammaln(a + b)
+
+  # Calculate beta loss
+  loss = -log_g_ab + log_g_a + log_g_b - (a-1)*torch.log(img_alpha) - (b-1)*torch.log(img_beta)
+
+  return torch.mean(loss)
+
 
 def ssim(img1, img2, window_size=11, size_average=True):
     channel = img1.size(-3)
