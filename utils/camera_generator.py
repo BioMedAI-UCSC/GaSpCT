@@ -7,12 +7,12 @@ import pandas as pd
 import yaml
 from graphics_utils import fov2focal
 
-def coordinates(r, fov_y):
+def coordinates(r, fov_y, number_of_views):
     coordinate_list = list()
     # Retrieve camera poses for each of the image
-    x = r * cos(2 * pi * i / args.number_of_views)
-    z = r * sin(2 * pi * i / args.number_of_views)
-    phi = 2 * pi * i / args.number_of_views + pi if i < args.number_of_views / 2 else 2 * pi * i / args.number_of_views - pi
+    x = r * cos(2 * pi * i / number_of_views)
+    z = r * sin(2 * pi * i / number_of_views)
+    phi = 2 * pi * i / number_of_views + pi if i < number_of_views / 2 else 2 * pi * i / number_of_views - pi
     coords = (x, fov_y/2.0, z, 0, phi)
     coordinate_list.append(coords)
     return coordinate_list
@@ -59,7 +59,8 @@ def metadata_to_intrinsics(d_source, d_patient, det_size):
     return focal_length, principle_point
 
 def write_yaml(yaml_data):
-    with open('data.yml', 'w') as f:
+    output_file = 'camera_parameters.yml'
+    with open(output_file, 'w') as f:
         for line in yaml_data:
             f.write(line)
 
@@ -68,63 +69,49 @@ def medical_to_true_fov(medical_fov, distance):
 
 
 if __name__ == "__main__":
+    
+    input_yaml_file = "ct_configuration.yml"
+    with open(input_yaml_file) as f:
+        ct_config = yaml.safe_load(f)
 
-    # Note to do: add required=True after finishing with tests
-    parser = ArgumentParser("Coordinate Generator")
-    parser.add_argument("--distance_source_to_patient", "-p", default=541, type=float)
-    parser.add_argument("--distance_source_to_detector", "-d", default=949, type=float)
-    parser.add_argument("--detector_size", "-s", default=320, type=float)
-    parser.add_argument("--fov_x", "-x", default = 300, type=int)
-    parser.add_argument("--fov_y", "-y", default = 175, type=int)
-    parser.add_argument("--fov_z", "-z", default = 300, type=int)
-    parser.add_argument("--number_of_views", "-v", default = 360, type=int)
-    parser.add_argument("--height", "-he", default = 128, type=float)
-    parser.add_argument("--width", "-w", default = 128, type=int)
-    parser.add_argument("--output", "-o", default="cameras", type=str)
+    assert int(ct_config['source_to_patient'] > 0), f"The distance from the source to patient (distance_source_to_patient) must be greater than 0, got {ct_config['source_to_patient']}"
+    assert int(ct_config['source_to_detector'] > 0), f"The distance from the source to detector (distance_source_to_detector) must be greater than 0, got {ct_config['source_to_detector']}"
+    assert int(ct_config['detector_size'] > 0), f"Detector size must be greater than 0, got {ct_config['detector_size']}"
+    assert int(ct_config['scanner_fov_x'] > 0), f"fov_x must be greater than 0, got {ct_config['scanner_fox_x']}"
+    assert int(ct_config['scanner_fov_y'] > 0), f"fov_y must be greater than 0, got {ct_config['scanner_fox_y']}"
+    assert int(ct_config['scanner_fov_z'] > 0), f"fov_z must be greater than 0, got {ct_config['scanner_fox_z']}"
+    assert int(ct_config['number_of_views'] > 0), f"Number of views must be greater than 0, got {ct_config['number_of_views']}"
+    assert int(ct_config['height'] > 0), f"height must be greater than 0, got {ct_config['height']}"
+    assert int(ct_config['width'] > 0), f"width must be greater than 0, got {ct_config['width']}"
 
-    args = parser.parse_args()
+    radius = int(ct_config['source_to_detector']/2)
+    camera_poses = []
 
-    assert args.distance_source_to_patient > 0, f"The distance from the source to patient (distance_source_to_patient) must be greater than 0, got {args.distance_source_to_patient}"
-    assert args.distance_source_to_detector > 0, f"The distance from the source to detector (distance_source_to_detector) must be greater than 0, got {args.distance_source_to_detector}"
-    assert args.detector_size > 0, f"Detector size must be greater than 0, got {args.detector_size}"
-    assert args.fov_x > 0, f"fov_x must be greater than 0, got {args.fov_x}"
-    assert args.fov_y > 0, f"fov_y must be greater than 0, got {args.fov_y}"
-    assert args.fov_z > 0, f"fov_z must be greater than 0, got {args.fov_z}"
-    assert args.number_of_views > 0, f"Number of views must be greater than 0, got {args.number_of_views}"
-    assert args.height > 0, f"height must be greater than 0, got {args.height}"
-    assert args.width > 0, f"width must be greater than 0, got {args.width}"
-
-    os.makedirs(args.output, exist_ok=True)
-
-    radius = int(args.distance_source_to_detector/2)
-
-    yaml_data = []
-
-    for i in range(args.number_of_views):
-        coords = coordinates(radius, args.fov_y)
-        # print(coords)
-        entry_name = "image_" + str(i+1)
+    for i in range(ct_config['number_of_views']):
+        coords = coordinates(radius, int(ct_config['scanner_fov_y']), int(ct_config['number_of_views']))
+        entry_number = ct_config['output_format'] + str(i)
+        entry_name = entry_number[-4:] + '.' + ct_config['file_format']
         Rot = retrieve_rotation_matrix(coords[0][4])
         tvec = calculate_translation_vector(Rot, coords[0][1:4])
 
         entry = {
           entry_name: {
             'intrinsics': {
-              'focal_length_x': fov2focal(medical_to_true_fov(args.fov_x, args.distance_source_to_patient), args.detector_size),
-              'focal_length_z': fov2focal(medical_to_true_fov(args.fov_z, args.distance_source_to_patient), args.detector_size),
-              'principle_point': int(args.detector_size/2) 
+              'focal_length_x': fov2focal(medical_to_true_fov(int(ct_config['scanner_fov_x']), int(ct_config['source_to_patient'])), int(ct_config['detector_size'])),
+              'focal_length_z': fov2focal(medical_to_true_fov(int(ct_config['scanner_fov_z']), int(ct_config['source_to_patient'])), int(ct_config['detector_size'])),
+              'principle_point': int(ct_config['detector_size']/2)
             },
             'extrinsics': {
               'qvec': rotation_matrix_to_quaternion(Rot).tolist(),
               'tvec': tvec.tolist()
             },
-            'height': args.height,
-            'width': args.width
+            'height': int(ct_config['height']),
+            'width': int(ct_config['width'])
           }
         }
-        yaml_data.append(yaml.dump(entry, Dumper=yaml.Dumper))
+        camera_poses.append(yaml.dump(entry, Dumper=yaml.Dumper))
 
         #import pdb; pdb.set_trace()
 
-    write_yaml(yaml_data)
+    write_yaml(camera_poses)
     
