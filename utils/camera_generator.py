@@ -89,7 +89,8 @@ if __name__ == "__main__":
 
     for i in range(ct_config['number_of_views']):
         coords = coordinates(radius, int(ct_config['scanner_fov_y']), int(ct_config['number_of_views']))
-        entry_name = "image_" + str(i+1)
+        entry_number = ct_config['output_format'] + str(i)
+        entry_name = entry_number[-4:] + '.' + ct_config['file_format']
         Rot = retrieve_rotation_matrix(coords[0][4])
         tvec = calculate_translation_vector(Rot, coords[0][1:4])
 
