@@ -133,7 +133,6 @@ def storePly(path, xyz, rgb):
 def readColmapSceneInfo(path, images, eval, llffhold=8, use_yaml=False):
     if use_yaml:
         yaml_file = os.path.join(path, "sparse/0", "cam_config.yaml")
-        import pdb; pdb.set_trace()
         cam_extrinsics = read_extrinsics_config(yaml_file)
         cam_intrinsics = read_intrinsics_config(yaml_file)
     else:

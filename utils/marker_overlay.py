@@ -49,7 +49,6 @@ img2.PixelData = img2.pixel_array.tobytes()
 print(f"Img1: {img1.pixel_array[250,350]}")
 print(f"Img2 Altered: {img2.pixel_array[250,350]}")
 
-import pdb; pdb.set_trace()
 
 # Save as new DICOM file
 # pydicom.dcmwrite(output_name, img2)
