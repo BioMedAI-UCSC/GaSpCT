@@ -1,0 +1,22 @@
+# YAML file containing all the scanner and medical image specific parameters retrieved from DICOM metadata
+# Default values correspond to the brain dataset used for GaSpCT: Novel Views for CT Imaging
+# You can change the values to correspond to different CT scans
+
+number_of_views: 360
+
+# all following are in mm
+source_to_patient: 541
+source_to_detector: 949
+detector_size: 320
+scanner_fov_x: 300
+scanner_fov_y: 175
+scanner_fov_z: 300
+
+# next two are measured in pixels
+height: 128
+width: 128
+
+# format output
+output_format: "0000"
+file_format: "png"
+
