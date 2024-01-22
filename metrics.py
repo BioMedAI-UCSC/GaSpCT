@@ -20,6 +20,8 @@ import json
 from tqdm import tqdm
 from utils.image_utils import psnr
 from argparse import ArgumentParser
+from torchmetrics.image.fid import FrechetInceptionDistance
+from torchmetrics.image.kid import KernelInceptionDistance
 
 def readImages(renders_dir, gt_dir):
     renders = []
@@ -42,7 +44,7 @@ def evaluate(model_paths):
     print("")
 
     for scene_dir in model_paths:
-        try:
+        # try:
             print("Scene:", scene_dir)
             full_dict[scene_dir] = {}
             per_view_dict[scene_dir] = {}
@@ -67,15 +69,37 @@ def evaluate(model_paths):
                 ssims = []
                 psnrs = []
                 lpipss = []
+                
+                gts_batch = torch.cat(gts, dim=0)
+                renders_batch = torch.cat(gts, dim=0)
+                
+                fid = FrechetInceptionDistance(feature=2048)
+                gts_dist1 = gts_batch.to(dtype=torch.uint8).to('cpu')
+                render_dist2 = renders_batch.to(dtype=torch.uint8).to('cpu')
+                fid.update(gts_dist1, real=True)
+                fid.update(render_dist2, real=False)
+                fid_score = fid.compute()
+                
+                kid = KernelInceptionDistance(subset_size=min(50, len(gts)))
+                kid.update(gts_dist1, real=True)
+                kid.update(render_dist2, real=False)
+                kid_mean, kid_std = kid.compute()
+                
 
                 for idx in tqdm(range(len(renders)), desc="Metric evaluation progress"):
                     ssims.append(ssim(renders[idx], gts[idx]))
                     psnrs.append(psnr(renders[idx], gts[idx]))
                     lpipss.append(lpips(renders[idx], gts[idx], net_type='vgg'))
+                    fid = FrechetInceptionDistance(feature=64)
+                
+                print("      FID : {:>12.7f}".format(fid_score))
+                print(" KID mean : {:>12.7f}".format(kid_mean))
+                print("  KID std : {:>12.7f}".format(kid_std))
 
-                print("  SSIM : {:>12.7f}".format(torch.tensor(ssims).mean(), ".5"))
-                print("  PSNR : {:>12.7f}".format(torch.tensor(psnrs).mean(), ".5"))
-                print("  LPIPS: {:>12.7f}".format(torch.tensor(lpipss).mean(), ".5"))
+
+                print("     SSIM : {:>12.7f}".format(torch.tensor(ssims).mean(), ".5"))
+                print("     PSNR : {:>12.7f}".format(torch.tensor(psnrs).mean(), ".5"))
+                print("     LPIPS: {:>12.7f}".format(torch.tensor(lpipss).mean(), ".5"))
                 print("")
 
                 full_dict[scene_dir][method].update({"SSIM": torch.tensor(ssims).mean().item(),
@@ -89,8 +113,8 @@ def evaluate(model_paths):
                 json.dump(full_dict[scene_dir], fp, indent=True)
             with open(scene_dir + "/per_view.json", 'w') as fp:
                 json.dump(per_view_dict[scene_dir], fp, indent=True)
-        except:
-            print("Unable to compute metrics for model", scene_dir)
+        # except:
+        #     print("Unable to compute metrics for model", scene_dir)
 
 if __name__ == "__main__":
     device = torch.device("cuda:0")
@@ -99,5 +123,8 @@ if __name__ == "__main__":
     # Set up command line argument parser
     parser = ArgumentParser(description="Training script parameters")
     parser.add_argument('--model_paths', '-m', required=True, nargs="+", type=str, default=[])
+    parser.add_argument('--fid', '-f', required=False, type=int, default=2048)
+    parser.add_argument('--kid', '-k', required=False, type=int, default=2048)
+
     args = parser.parse_args()
     evaluate(args.model_paths)
