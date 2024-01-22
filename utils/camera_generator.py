@@ -97,8 +97,6 @@ if __name__ == "__main__":
         y_pts.append(coords[0][2])
         entry_number = ct_config['output_format'] + str(i)
         entry_name = entry_number[-4:] + '.' + ct_config['file_format']
-        if i%45==0:
-            import pdb; pdb.set_trace()
         Rot = retrieve_rotation_matrix(coords[0][3])
         tvec = calculate_translation_vector(Rot, coords[0][0:3])
 
