@@ -1,4 +1,4 @@
-from math import sin, cos, asin, acos, pi, radians, tan
+from math import sin, cos, asin, acos, pi, radians, tan, acos, sqrt
 from scipy.spatial.transform import Rotation as R
 from argparse import ArgumentParser
 import numpy as np
@@ -6,14 +6,17 @@ import os
 import pandas as pd
 import yaml
 from graphics_utils import fov2focal
+import matplotlib.pyplot as plt
 
 def coordinates(r, fov_y, number_of_views):
     coordinate_list = list()
+    # TODO: Add offset and use first cam pose as origin, which means setting y to 0 and phi to 0 and calculate theta
     # Retrieve camera poses for each of the image
     x = r * cos(2 * pi * i / number_of_views)
     z = r * sin(2 * pi * i / number_of_views)
     phi = 2 * pi * i / number_of_views + pi if i < number_of_views / 2 else 2 * pi * i / number_of_views - pi
-    coords = (x, fov_y/2.0, z, 0, phi)
+    theta =  (2 * pi * i / number_of_views) + (pi/2)
+    coords = (x, 0, z, theta, 0)
     coordinate_list.append(coords)
     return coordinate_list
 
@@ -40,17 +43,17 @@ def rotation_matrix_to_quaternion(R):
     return q
 
 def retrieve_rotation_matrix(angle):
-    yaw =radians(angle)
+    yaw = 0
     roll = 0
-    pitch = 0
-    R_x = np.array([[cos(yaw), -sin(yaw), 0], [sin(yaw), cos(yaw), 0], [0, 0, 1]])
-    R_y = np.array([[cos(roll), 0, sin(roll)], [0, 1, 0], [-sin(roll), 0, cos(roll)]])
-    R_z = np.array([[1, 0 , 0], [0, cos(pitch), -sin(pitch)], [0, sin(pitch), cos(pitch)]])
-    R = np.dot(R_x, R_y, R_z)
-    return R
+    pitch = angle
+    R_z = np.array([[cos(roll), -sin(roll), 0], [sin(roll), cos(roll), 0], [0, 0, 1]])
+    R_y = np.array([[cos(pitch), 0, sin(pitch)], [0, 1, 0], [-sin(pitch), 0, cos(pitch)]])
+    R_x = np.array([[1, 0 , 0], [0, cos(yaw), -sin(yaw)], [0, sin(yaw), cos(yaw)]])
+    Rot_mat = np.dot(R_z, np.dot(R_y, R_x))
+    return Rot_mat
 
 def calculate_translation_vector(R, C):
-    translation_vector = np.dot(np.linalg.inv(-R.transpose()), C)
+    translation_vector = np.dot(np.linalg.inv(-R.T), C)
     return translation_vector
 
 def metadata_to_intrinsics(d_source, d_patient, det_size):
@@ -86,13 +89,18 @@ if __name__ == "__main__":
 
     radius = int(ct_config['source_to_detector']/2)
     camera_poses = []
-
+    x_pts = []
+    y_pts = []
     for i in range(ct_config['number_of_views']):
         coords = coordinates(radius, int(ct_config['scanner_fov_y']), int(ct_config['number_of_views']))
+        x_pts.append(coords[0][0])
+        y_pts.append(coords[0][2])
         entry_number = ct_config['output_format'] + str(i)
         entry_name = entry_number[-4:] + '.' + ct_config['file_format']
-        Rot = retrieve_rotation_matrix(coords[0][4])
-        tvec = calculate_translation_vector(Rot, coords[0][1:4])
+        if i%45==0:
+            import pdb; pdb.set_trace()
+        Rot = retrieve_rotation_matrix(coords[0][3])
+        tvec = calculate_translation_vector(Rot, coords[0][0:3])
 
         entry = {
           entry_name: {
@@ -102,16 +110,19 @@ if __name__ == "__main__":
               'principle_point': int(ct_config['detector_size']/2)
             },
             'extrinsics': {
-              'qvec': rotation_matrix_to_quaternion(Rot).tolist(),
+            #   'qvec': rotation_matrix_to_quaternion(Rot).tolist(),
+              'qvec': R.from_matrix(Rot).as_quat().tolist(),
               'tvec': tvec.tolist()
             },
             'height': int(ct_config['height']),
             'width': int(ct_config['width'])
           }
         }
+        # import pdb; pdb.set_trace()
         camera_poses.append(yaml.dump(entry, Dumper=yaml.Dumper))
 
-        #import pdb; pdb.set_trace()
+    plt.plot(x_pts, y_pts)
+    plt.savefig("test.png")
 
     write_yaml(camera_poses)
     
