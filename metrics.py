@@ -20,6 +20,8 @@ import json
 from tqdm import tqdm
 from utils.image_utils import psnr
 from argparse import ArgumentParser
+from torchmetrics.image.fid import FrechetInceptionDistance
+from torchmetrics.image.kid import KernelInceptionDistance
 
 def readImages(renders_dir, gt_dir):
     renders = []
@@ -34,7 +36,6 @@ def readImages(renders_dir, gt_dir):
     return renders, gts, image_names
 
 def evaluate(model_paths):
-
     full_dict = {}
     per_view_dict = {}
     full_dict_polytopeonly = {}
@@ -60,7 +61,7 @@ def evaluate(model_paths):
                 per_view_dict_polytopeonly[scene_dir][method] = {}
 
                 method_dir = test_dir / method
-                gt_dir = method_dir/ "gt"
+                gt_dir = method_dir / "gt"
                 renders_dir = method_dir / "renders"
                 renders, gts, image_names = readImages(renders_dir, gt_dir)
 
@@ -68,22 +69,43 @@ def evaluate(model_paths):
                 psnrs = []
                 lpipss = []
 
+                gts_batch = torch.cat(gts, dim=0)
+                renders_batch = torch.cat(gts, dim=0)
+
+                fid = FrechetInceptionDistance(feature=2048)
+                gts_dist1 = gts_batch.to(dtype=torch.uint8).to('cpu')
+                render_dist2 = renders_batch.to(dtype=torch.uint8).to('cpu')
+                fid.update(gts_dist1, real=True)
+                fid.update(render_dist2, real=False)
+                fid_score = fid.compute()
+
+                kid = KernelInceptionDistance(subset_size=min(50, len(gts)))
+                kid.update(gts_dist1, real=True)
+                kid.update(render_dist2, real=False)
+                kid_mean, kid_std = kid.compute()
+
                 for idx in tqdm(range(len(renders)), desc="Metric evaluation progress"):
                     ssims.append(ssim(renders[idx], gts[idx]))
                     psnrs.append(psnr(renders[idx], gts[idx]))
                     lpipss.append(lpips(renders[idx], gts[idx], net_type='vgg'))
+                    fid = FrechetInceptionDistance(feature=64)
 
-                print("  SSIM : {:>12.7f}".format(torch.tensor(ssims).mean(), ".5"))
-                print("  PSNR : {:>12.7f}".format(torch.tensor(psnrs).mean(), ".5"))
-                print("  LPIPS: {:>12.7f}".format(torch.tensor(lpipss).mean(), ".5"))
+                print("      FID : {:>12.7f}".format(fid_score))
+                print(" KID mean : {:>12.7f}".format(kid_mean))
+                print("  KID std : {:>12.7f}".format(kid_std))
+
+                print("     SSIM : {:>12.7f}".format(torch.tensor(ssims).mean(), ".5"))
+                print("     PSNR : {:>12.7f}".format(torch.tensor(psnrs).mean(), ".5"))
+                print("     LPIPS: {:>12.7f}".format(torch.tensor(lpipss).mean(), ".5"))
                 print("")
 
                 full_dict[scene_dir][method].update({"SSIM": torch.tensor(ssims).mean().item(),
-                                                        "PSNR": torch.tensor(psnrs).mean().item(),
-                                                        "LPIPS": torch.tensor(lpipss).mean().item()})
-                per_view_dict[scene_dir][method].update({"SSIM": {name: ssim for ssim, name in zip(torch.tensor(ssims).tolist(), image_names)},
-                                                            "PSNR": {name: psnr for psnr, name in zip(torch.tensor(psnrs).tolist(), image_names)},
-                                                            "LPIPS": {name: lp for lp, name in zip(torch.tensor(lpipss).tolist(), image_names)}})
+                                                     "PSNR": torch.tensor(psnrs).mean().item(),
+                                                     "LPIPS": torch.tensor(lpipss).mean().item()})
+                per_view_dict[scene_dir][method].update(
+                    {"SSIM": {name: ssim for ssim, name in zip(torch.tensor(ssims).tolist(), image_names)},
+                     "PSNR": {name: psnr for psnr, name in zip(torch.tensor(psnrs).tolist(), image_names)},
+                     "LPIPS": {name: lp for lp, name in zip(torch.tensor(lpipss).tolist(), image_names)}})
 
             with open(scene_dir + "/results.json", 'w') as fp:
                 json.dump(full_dict[scene_dir], fp, indent=True)
@@ -99,5 +121,8 @@ if __name__ == "__main__":
     # Set up command line argument parser
     parser = ArgumentParser(description="Training script parameters")
     parser.add_argument('--model_paths', '-m', required=True, nargs="+", type=str, default=[])
+    parser.add_argument('--fid', '-f', required=False, type=int, default=2048)
+    parser.add_argument('--kid', '-k', required=False, type=int, default=2048)
+
     args = parser.parse_args()
     evaluate(args.model_paths)
