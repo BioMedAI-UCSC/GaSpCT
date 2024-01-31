@@ -54,6 +54,7 @@ class ModelParams(ParamGroup):
         self._white_background = False
         self.data_device = "cuda"
         self.eval = False
+        self.test_holdout = 8
         self.use_yaml = False
         super().__init__(parser, "Loading Parameters", sentinel)
 
