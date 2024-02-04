@@ -141,17 +141,23 @@ def training(dataset, opt, pipe, testing_iterations, saving_iterations, checkpoi
     plt.plot(range(first_iter, opt.iterations + 1), losses)
     plt.xlabel("Epoch")
     plt.ylabel("Loss")
-    plt.title("Loss over Time")
+    plt.title("Loss over Time - " + dataset.name)
 
     plt.savefig(dataset.model_path + "/loss")
 
 def prepare_output_and_logger(args):
+    print(args)
+    
     if not args.model_path:
         if os.getenv('OAR_JOB_ID'):
             unique_str=os.getenv('OAR_JOB_ID')
+            args.model_path = os.path.join("./output/", unique_str[0:10])
+        elif args.name != "":
+            unique_str = args.name
+            args.model_path = os.path.join("./output/", unique_str)
         else:
             unique_str = str(uuid.uuid4())
-        args.model_path = os.path.join("./output/", unique_str[0:10])
+            args.model_path = os.path.join("./output/", unique_str[0:10])
 
     # Set up output folder
     print("Output folder: {}".format(args.model_path))
@@ -214,8 +220,8 @@ if __name__ == "__main__":
     parser.add_argument('--port', type=int, default=6009)
     parser.add_argument('--debug_from', type=int, default=-1)
     parser.add_argument('--detect_anomaly', action='store_true', default=False)
-    parser.add_argument("--test_iterations", nargs="+", type=int, default=[i for i in range(0, 30_000, 1_000)])
-    parser.add_argument("--save_iterations", nargs="+", type=int, default=[i for i in range(0, 30_000, 5_000)])
+    parser.add_argument("--test_iterations", nargs="+", type=int, default=[i for i in range(0, 60_000, 1_000)])
+    parser.add_argument("--save_iterations", nargs="+", type=int, default=[i for i in range(0, 60_000, 5_000)])
     parser.add_argument("--quiet", action="store_true")
     parser.add_argument("--checkpoint_iterations", nargs="+", type=int, default=[])
     parser.add_argument("--start_checkpoint", type=str, default = None)
