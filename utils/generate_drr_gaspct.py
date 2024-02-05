@@ -114,6 +114,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
     input_path = args.Input
     save_root_path = args.Output
+    os.makedirs(save_root_path, exist_ok=True)
     plasti_path = '/usr/bin'
     output_raw_name = 'raw_file'
     # False: single xray output
