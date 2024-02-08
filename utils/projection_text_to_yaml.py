@@ -5,6 +5,7 @@ import numpy as np
 import os
 import pandas as pd
 import yaml
+import argparse
 from graphics_utils import fov2focal
 
 def rotation_matrix_to_quaternion(rotation_matrix):
@@ -74,7 +75,13 @@ def parse_text_file(file_path):
 
 if __name__ == "__main__":
 
-    directory_path = r"C:\Users\jveng\chest_001\chest_001"
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-i", "--Input", help = "Input directory of text files with projection data")
+    parser.add_argument("-o", "--Output", help = "Output file naming")
+    args = parser.parse_args()
+
+    directory_path = args.Input
+    output_file = args.Output
 
     text_files = [file for file in os.listdir(directory_path) if file.endswith('.txt')]
 
@@ -88,7 +95,6 @@ if __name__ == "__main__":
         
         # Specify before running
         image_dimension = [128, 128]
-        output_file = 'camera_parameters_mednerf.yml'
 
         Rot = np.delete(extrinsic_data, 3, axis=1)
         tvec = extrinsic_data[:, 3]
