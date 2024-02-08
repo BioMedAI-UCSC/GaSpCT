@@ -15,6 +15,7 @@ import matplotlib.pyplot as plt
 import SimpleITK as sitk
 from subprocess import check_output as qx
 from pydicom import dcmread
+import argparse
 
 
 # input could be .mhd/.mha format
@@ -106,8 +107,14 @@ def savepng(filename, direction, idx):
 
 
 if __name__ == '__main__':
-    input_path = '/path/to/directory'
-    save_root_path = '/path/to/save/directory'
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-i", "--Input", help = "Input directory of 2D Dicom Slices")
+    parser.add_argument("-p", "--Preprocessing", help = "Preprocessing naming of converted .mha file")
+    parser.add_argument("-o", "--Output", help = "Output directory of projection images")
+    args = parser.parse_args()
+    input_path = args.Input
+    save_root_path = args.Output
+    os.makedirs(save_root_path, exist_ok=True)
     plasti_path = '/usr/bin'
     output_raw_name = 'raw_file'
     # False: single xray output
@@ -115,7 +122,7 @@ if __name__ == '__main__':
     # True: dicom conversion & HU adjustment
     # False: output xray from given .mha (i.e., raw_input_file)
     preprocessing = True
-    raw_input_file = '/path/to/input/file'
+    raw_input_file = args.Preprocessing
     # Typical detector size: 200 - 400cm x 40-80 mm
     detector_size = "350 350"
     # Black bg: "0 255", white bg: "255 0"
