@@ -17,22 +17,23 @@ test_holdout_list="10 5 4 2 -4 -10"
 for i in $listVar; do
     echo "Processing $i"
     cd utils
-    python projection_test_to_yaml.py -i $prefix_dir$i -o $output_yaml
+    python projection_text_to_yaml.py -i $prefix_dir$i -o $output_yaml
     cd ..
     mkdir $prefix_var$i
     cd $prefix_var$i
+    mkdir images
     mkdir sparse
     cd sparse
     mkdir 0
     cd ../../
     mv utils/$output_yaml $prefix_var$i"/sparse/0/"$output_yaml 
     # maybe we need to convert to rgb from grayscale
-    mv utils/$prefix_dir$i"/*.png" $prefix_var$i"/images/"
+    mv "utils/${prefix_dir}${i}/*.png" "${prefix_var}${i}/images/"
     for j in $test_holdout_list; do
         echo "Holding every $jth image out for testing..."
         output_name=$prefix_var$i"/ratio_"$j
         python train.py -s ${DATA/DIR} --test_holdout $j --eval --use_yaml --name $output_name --iterations 35000 > $output_name"_train.txt"
-        python render -m $output_name > $output_name"_render.txt"
+        python render.py -m $output_name > $output_name"_render.txt"
         python metrics.py -m $output_name > $output_name"_metrics.txt"
     done
 done
