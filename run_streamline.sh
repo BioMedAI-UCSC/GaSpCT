@@ -28,7 +28,7 @@ for i in $listVar; do
     cd ../../
     mv utils/$output_yaml $prefix_var$i"/sparse/0/"$output_yaml 
     # maybe we need to convert to rgb from grayscale
-    mv "utils/${prefix_dir}${i}/*.png" "${prefix_var}${i}/images/"
+    mv utils/"${prefix_dir}${i}"/*.png "${prefix_var}${i}/images/"
     for j in $test_holdout_list; do
         echo "Holding every $jth image out for testing..."
         output_name=$prefix_var$i"/ratio_"$j
