@@ -32,7 +32,7 @@ for i in $listVar; do
     for j in $test_holdout_list; do
         echo "Holding every $jth image out for testing..."
         output_name=$prefix_var$i"/ratio_"$j
-        python train.py -s $prefix_dir$i --test_holdout $j --eval --use_yaml --name $output_name --iterations 35000 > $output_name"_train.txt"
+        python train.py -s $prefix_var$i --test_holdout $j --eval --use_yaml --name $output_name --iterations 35000 > $output_name"_train.txt"
         python render.py -m $output_name > $output_name"_render.txt"
         python metrics.py -m $output_name > $output_name"_metrics.txt"
     done
