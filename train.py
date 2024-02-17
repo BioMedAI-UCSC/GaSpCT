@@ -22,7 +22,8 @@ from tqdm import tqdm
 from utils.image_utils import psnr
 from argparse import ArgumentParser, Namespace
 from arguments import ModelParams, PipelineParams, OptimizationParams
-from render import render_sets
+import torchvision
+from os import makedirs
 
 try:
     from torch.utils.tensorboard import SummaryWriter
@@ -113,7 +114,30 @@ def training(dataset, opt, pipe, testing_iterations, saving_iterations, checkpoi
                 print("\n[ITER {}] Saving Gaussians".format(iteration))
                 scene.save(iteration)
 
-                if generate_gif:
+                if generate_gif and iteration % 100 == 0:
+                    def render_set(model_path, name, iteration, views, gaussians, pipeline, background):
+                        render_path = os.path.join(model_path, name, "gif".format(), "renders")
+
+                        makedirs(render_path, exist_ok=True)
+
+                        for idx, view in enumerate(tqdm(views, desc="Rendering progress")):
+                            rendering = render(view, gaussians, pipeline, background)["render"]
+                            torchvision.utils.save_image(rendering,
+                                                         os.path.join(render_path, '{0:05d}_{1:05d}'.format(idx,
+                                                                                                            iteration) + ".png"))
+
+                    def render_sets(dataset: ModelParams, iteration: int, pipeline: PipelineParams, skip_train: bool,
+                                    skip_test: bool):
+                        with torch.no_grad():
+                            gaussians = GaussianModel(dataset.sh_degree)
+                            scene = Scene(dataset, gaussians, load_iteration=iteration, shuffle=False)
+
+                            bg_color = [1, 1, 1] if dataset.white_background else [0, 0, 0]
+                            background = torch.tensor(bg_color, dtype=torch.float32, device="cuda")
+
+                            render_set(dataset.model_path, "test", scene.loaded_iter, scene.getTestCameras(), gaussians,
+                                       pipeline, background)
+
                     render_sets(dataset, iteration, pipe, False, False)
 
             # Densification
@@ -216,7 +240,7 @@ if __name__ == "__main__":
     parser.add_argument("--quiet", action="store_true")
     parser.add_argument("--checkpoint_iterations", nargs="+", type=int, default=[])
     parser.add_argument("--start_checkpoint", type=str, default = None)
-    parser.add_argument("--generate_gif", type=bool, default=False)
+    parser.add_argument("--generate_gif", action="store_true")
     args = parser.parse_args(sys.argv[1:])
     args.save_iterations.append(args.iterations)
     
