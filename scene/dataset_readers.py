@@ -168,10 +168,27 @@ def readColmapSceneInfo(path, images, eval, llffhold=8, use_yaml=False):
         ply_path = os.path.join(path, "points3d.ply")
         # Since this data set has no colmap data, we start with random points
         num_pts = 100_000
+        remaining_pts = num_pts
         print(f"Generating random point cloud ({num_pts})...")
-        
         # We create random points inside the bounds of the synthetic Blender scenes
-        xyz = np.random.random((num_pts, 3)) * 2.6 - 1.3
+            
+
+        xyz = np.random.random((num_pts, 3)) * 4.6 - 1.3
+        x_max, y_max, z_max = xyz.max(0)
+        x_min, y_min, z_min = xyz.min(0)
+
+        xyz = []
+
+        a, b, c = ((x_max-x_min) // 2), ((y_max-y_min) // 2) * 0.8, ((z_max-z_min) // 2)
+
+        while(remaining_pts>0):
+            # import pdb; pdb.set_trace()
+            x, y, z = np.random.random(3) * 2.6 - 1.3
+            if ((((x**2)/(a**2)) + ((y**2)/(b**2)) + ((z**2)/(c**2))) < 1):
+                xyz.append(np.array([x, y, z]))
+                remaining_pts -= 1
+        xyz = np.array(xyz)
+        print("Number of points within ellipsoids:", xyz.shape)
         shs = np.random.random((num_pts, 3)) / 255.0
         pcd = BasicPointCloud(points=xyz, colors=SH2RGB(shs), normals=np.zeros((num_pts, 3)))
 
