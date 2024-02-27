@@ -10,7 +10,7 @@ prefix_var="medical_gaspct_default_loss_"
 prefix_dir="sims/"
 suffix_output="_output"
 output_yaml="cam_config.yaml"
-listVar="simulation_1 simulation_2 simulation_3 simulation_4 simulation_5 simulation_6 simulation_7 simulation_8 \
+listVar="simulation_0 simulation_1 simulation_2 simulation_3 simulation_4 simulation_5 simulation_6 simulation_7 simulation_8 \
          simulation_9 simulation_10 simulation_11 simulation_12 simulation_13 simulation_14 simulation_15 simulation_16 \
          simulation_17 simulation_18 simulation_19"
 test_holdout_list="10 5 4 2 -4 -10"
