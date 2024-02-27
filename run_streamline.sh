@@ -6,7 +6,7 @@
 
 echo "Starting scipt..."
 
-prefix_var="medical_"
+prefix_var="medical_gaspct_default_loss_"
 prefix_dir="sims/"
 suffix_output="_output"
 output_yaml="cam_config.yaml"
@@ -14,6 +14,15 @@ listVar="simulation_1 simulation_2 simulation_3 simulation_4 simulation_5 simula
          simulation_9 simulation_10 simulation_11 simulation_12 simulation_13 simulation_14 simulation_15 simulation_16 \
          simulation_17 simulation_18 simulation_19"
 test_holdout_list="10 5 4 2 -4 -10"
+
+feature_lr=0.01
+opacity_lr=0.01
+percent_dense=0.005
+lambda_dssim=0.9
+lambda_tv=0.005
+lambda_beta=0.005
+iterations=35000
+
 for i in $listVar; do
     echo "Processing $i"
     cd utils
@@ -29,7 +38,7 @@ for i in $listVar; do
         echo "Holding every ${j}th image out for testing..."
         output_name=output/${prefix_var}${i}/ratio${j}
 	mkdir -p ${output_name}
-        python train.py -s output/$prefix_var$i --test_holdout $j --eval --use_yaml --name ${prefix_var}${i}/ratio${j} --iterations 1500 > $output_name"/train.txt"
+        python train.py -s output/$prefix_var$i --test_holdout $j --eval --use_yaml --name ${prefix_var}${i}/ratio${j} --iterations $iterations --feature_lr $feature_lr --opacity_lr $opacity_lr --percent_dense $percent_dense --lambda_dssim $lambda_dssim --lambda_tv $lambda_tv --lambda_beta $lambda_beta > $output_name"/train.txt"
         python render.py -m $output_name > $output_name"/render.txt"
         python metrics.py -m $output_name > $output_name"/metrics.txt"
     done
