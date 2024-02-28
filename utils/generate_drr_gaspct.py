@@ -124,12 +124,12 @@ if __name__ == '__main__':
     preprocessing = True
     raw_input_file = args.Preprocessing
     # Typical detector size: 200 - 400cm x 40-80 mm
-    detector_size = "350 350"
+    detector_size = "480 640"
     # Black bg: "0 255", white bg: "255 0"
     bg_color = "0 255"
     # If single view, choose frontal or lateral view
     frontal_dir = True
-    resolution = "256 256"
+    resolution = "768 1024"
     # If multiple view:
     num_xrays = "360"
     angle = "1"
