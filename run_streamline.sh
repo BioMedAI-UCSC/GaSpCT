@@ -9,6 +9,7 @@ echo "Starting scipt..."
 prefix_var="medical_gaspct_default_loss_"
 prefix_dir="sims/"
 suffix_output="_output"
+input_yaml="camera_parameters.yml"
 output_yaml="cam_config.yaml"
 listVar="simulation_0 simulation_1 simulation_2 simulation_3 simulation_4 simulation_5 simulation_6 simulation_7 simulation_8 \
          simulation_9 simulation_10 simulation_11 simulation_12 simulation_13 simulation_14 simulation_15 simulation_16 \
@@ -25,11 +26,8 @@ iterations=35000
 
 for i in $listVar; do
     echo "Processing $i"
-    cd utils
-    python projection_text_to_yaml.py -i $prefix_dir$i -o $output_yaml
-    cd ..
     mkdir -p output/${prefix_var}${i}/sparse/0 output/${prefix_var}${i}/images
-    mv utils/$output_yaml output/$prefix_var$i"/sparse/0/"$output_yaml
+    cp utils/sims/${i}/$input_yaml output/$prefix_var$i"/sparse/0/"$output_yaml
     # maybe we need to convert to rgb from grayscale
     cp utils/"${prefix_dir}${i}"/*.png "output/${prefix_var}${i}/images/"
     python utils/rename_images.py -i "output/${prefix_var}${i}/images/"
