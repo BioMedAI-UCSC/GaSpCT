@@ -22,7 +22,7 @@ percent_dense=0.005
 lambda_dssim=0.9
 lambda_tv=0.005
 lambda_beta=0.005
-iterations=35000
+iterations=25000
 
 for i in $listVar; do
     echo "Processing $i"
