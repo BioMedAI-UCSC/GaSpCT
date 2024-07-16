@@ -57,6 +57,7 @@ class ModelParams(ParamGroup):
         self.test_holdout = 8
         self.use_yaml = False
         self.name = ""
+        self.ellipsoid = 1
         super().__init__(parser, "Loading Parameters", sentinel)
 
     def extract(self, args):

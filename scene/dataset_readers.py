@@ -130,7 +130,7 @@ def storePly(path, xyz, rgb):
     ply_data = PlyData([vertex_element])
     ply_data.write(path)
 
-def readColmapSceneInfo(path, images, eval, llffhold=8, use_yaml=False):
+def readColmapSceneInfo(path, images, eval, ellipsoid, llffhold=8, use_yaml=False):
     if use_yaml:
         yaml_file = os.path.join(path, "sparse/0", "cam_config.yaml")
         cam_extrinsics = read_extrinsics_config(yaml_file)
@@ -171,24 +171,28 @@ def readColmapSceneInfo(path, images, eval, llffhold=8, use_yaml=False):
         remaining_pts = num_pts
         print(f"Generating random point cloud ({num_pts})...")
         # We create random points inside the bounds of the synthetic Blender scenes
-            
-
-        xyz = np.random.random((num_pts, 3)) * 4.6 - 1.3
-        x_max, y_max, z_max = xyz.max(0)
-        x_min, y_min, z_min = xyz.min(0)
-
+        
         xyz = []
+        if (ellipsoid == 1):       
+            xyz = np.random.random((num_pts, 3)) * 4.6 - 1.3
+            x_max, y_max, z_max = xyz.max(0)
+            x_min, y_min, z_min = xyz.min(0)
 
-        a, b, c = ((x_max-x_min) // 2), ((y_max-y_min) // 2) * 0.8, ((z_max-z_min) // 2)
+            xyz = []
 
-        while(remaining_pts>0):
-            # import pdb; pdb.set_trace()
-            x, y, z = np.random.random(3) * 2.6 - 1.3
-            if ((((x**2)/(a**2)) + ((y**2)/(b**2)) + ((z**2)/(c**2))) < 1):
-                xyz.append(np.array([x, y, z]))
-                remaining_pts -= 1
-        xyz = np.array(xyz)
-        print("Number of points within ellipsoids:", xyz.shape)
+            a, b, c = ((x_max-x_min) // 2), ((y_max-y_min) // 2) * 0.8, ((z_max-z_min) // 2)
+
+            while(remaining_pts>0):
+                # import pdb; pdb.set_trace()
+                x, y, z = np.random.random(3) * 2.6 - 1.3
+                if ((((x**2)/(a**2)) + ((y**2)/(b**2)) + ((z**2)/(c**2))) < 1):
+                    xyz.append(np.array([x, y, z]))
+                    remaining_pts -= 1
+            xyz = np.array(xyz)
+        else:
+            xyz = np.random.random((num_pts, 3)) * 2.6 - 1.3
+            xyz = np.array(xyz)
+        # print("Number of points within ellipsoids:", xyz.shape)
         shs = np.random.random((num_pts, 3)) / 255.0
         pcd = BasicPointCloud(points=xyz, colors=SH2RGB(shs), normals=np.zeros((num_pts, 3)))
 
