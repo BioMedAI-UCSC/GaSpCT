@@ -9,8 +9,8 @@ echo "Starting scipt..."
 prefix_var="medical_gaspct_"
 prefix_dir="data/"
 suffix_output="_output"
-input_yaml="camera_parameters.yml"
-output_yaml="cam_config.yaml"
+ct_config_yaml="ct_configuration.yml"
+input_yaml="cam_config.yaml"
 
 # List of directories with radiograph images, can be multiple directories separated by space
 data_paths="simulation_0"
@@ -32,7 +32,8 @@ iterations=25000
 for i in $data_paths; do
     echo "Processing $i"
     mkdir -p output/${prefix_var}${i}/sparse/0 output/${prefix_var}${i}/images
-    cp "${prefix_dir}${i}"/$input_yaml output/$prefix_var$i"/sparse/0/"$output_yaml
+    python utils/camera_generator.py -i "${prefix_dir}${i}"/$ct_config_yaml -o "${prefix_dir}${i}"/$input_yaml
+    cp "${prefix_dir}${i}"/$input_yaml output/$prefix_var$i"/sparse/0/"
     cp "${prefix_dir}${i}"/*.png "output/${prefix_var}${i}/images/"
     # In case images need to be renamed and converted to rgb from grayscale (TODO: confirm naming works well)
     python utils/rename_images.py -i "output/${prefix_var}${i}/images/"

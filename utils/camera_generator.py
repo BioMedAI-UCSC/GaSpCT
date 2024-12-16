@@ -61,8 +61,7 @@ def metadata_to_intrinsics(d_source, d_patient, det_size):
     principle_point = [0,0,0]
     return focal_length, principle_point
 
-def write_yaml(yaml_data):
-    output_file = 'camera_parameters.yml'
+def write_yaml(yaml_data, output_file):
     with open(output_file, 'w') as f:
         for line in yaml_data:
             f.write(line)
@@ -70,13 +69,24 @@ def write_yaml(yaml_data):
 def medical_to_true_fov(medical_fov, distance):
     return 2 * tan(medical_fov / (2 * distance))
 
+def parse_arguments():
+    parser = ArgumentParser(description='Process CT configuration and generate camera poses.')
+    parser.add_argument('--input', '-i', 
+                      required=True,
+                      help='Input YAML configuration file path')
+    parser.add_argument('--output', '-o',
+                      required=True,
+                      help='Output YAML file path for camera configuration')
+    return parser.parse_args()
 
 if __name__ == "__main__":
+    args = parse_arguments()
     
-    input_yaml_file = "ct_configuration.yml"
-    with open(input_yaml_file) as f:
+    # Read input configuration
+    with open(args.input) as f:
         ct_config = yaml.safe_load(f)
 
+    # Validation checks
     assert int(ct_config['source_to_patient'] > 0), f"The distance from the source to patient (distance_source_to_patient) must be greater than 0, got {ct_config['source_to_patient']}"
     assert int(ct_config['source_to_detector'] > 0), f"The distance from the source to detector (distance_source_to_detector) must be greater than 0, got {ct_config['source_to_detector']}"
     assert int(ct_config['detector_size'] > 0), f"Detector size must be greater than 0, got {ct_config['detector_size']}"
@@ -108,7 +118,6 @@ if __name__ == "__main__":
               'principle_point': int(ct_config['detector_size']/2)
             },
             'extrinsics': {
-            #   'qvec': rotation_matrix_to_quaternion(Rot).tolist(),
               'qvec': R.from_matrix(Rot).as_quat().tolist(),
               'tvec': tvec.tolist()
             },
@@ -116,11 +125,9 @@ if __name__ == "__main__":
             'width': int(ct_config['width'])
           }
         }
-        # import pdb; pdb.set_trace()
         camera_poses.append(yaml.dump(entry, Dumper=yaml.Dumper))
 
     plt.plot(x_pts, y_pts)
     plt.savefig("test.png")
 
-    write_yaml(camera_poses)
-    
+    write_yaml(camera_poses, args.output)
