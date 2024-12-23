@@ -12,11 +12,12 @@ suffix_output="_output"
 ct_config_yaml="ct_configuration.yml"
 input_yaml="cam_config.yaml"
 
-# List of directories with radiograph images, can be multiple directories separated by space
+# List of directories under ./data with radiograph images, can be multiple directories separated by space
 data_paths="simulation_0"
 # One out of how many pictures should be saved for testing, negatives indicate more testing than training
-# In the example below, 1 out of "2" images are hidden from the optimization for testing purposes
-# Multiple ratios can be passed separated by space (TODO: maybe change value to ratio?)
+# In the example below, 1 out of 2 images are hidden from the optimization for testing purposes
+# A minus can be used if you want more testing data than training data. "-4" means 1 out of 4 images is used for training the model.
+# Multiple ratios can be passed separated by space
 test_holdout_list="2"
 
 # Hyperparameters related to the training of the model
