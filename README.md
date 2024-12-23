@@ -76,9 +76,9 @@ We recommend using our streamline shell script to run GaSpCT which should take c
 
 If you have used our work or found it insightful for your project, please consider citing us using the following BibTex block
 
-@article{nikolakakis2024gaspct,
-  title={GaSpCT: Gaussian Splatting for Novel CT Projection View Synthesis},
-  author={Nikolakakis, Emmanouil and Gupta, Utkarsh and Vengosh, Jonathan and Bui, Justin and Marinescu, Razvan},
-  journal={arXiv preprint arXiv:2404.03126},
-  year={2024}
+@article{nikolakakis2024gaspct,  
+  title={GaSpCT: Gaussian Splatting for Novel CT Projection View Synthesis},   
+  author={Nikolakakis, Emmanouil and Gupta, Utkarsh and Vengosh, Jonathan and Bui, Justin and Marinescu, Razvan},  
+  journal={arXiv preprint arXiv:2404.03126},  
+  year={2024}  
 }
