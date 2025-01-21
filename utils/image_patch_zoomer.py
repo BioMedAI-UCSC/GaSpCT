@@ -26,8 +26,8 @@ def show_and_save_two_images_with_zoomed_patches(image_path1, image_path2, outpu
         img_array = np.array(img)
         
         # Calculate patch coordinates (center of the image)
-        start_row = (128 - patch_size) // 2
-        start_col = (128 - patch_size) // 2
+        start_row = (128 - patch_size) // 2 + 18
+        start_col = (128 - patch_size) // 2 + 18
         
         # Extract the patch
         patch = img_array[start_row:start_row+patch_size, 
@@ -65,11 +65,11 @@ def show_and_save_two_images_with_zoomed_patches(image_path1, image_path2, outpu
     ax1.add_patch(Rectangle((start_col1, start_row1), 
                           patch_size, patch_size,
                           fill=False, color='red', linewidth=2))
-    ax1.set_title('First Image (128x128)')
+    ax1.set_title('Ground Truth (128x128)')
     ax1.axis('off')
     
     ax2.imshow(patch1, cmap='gray', interpolation='nearest')
-    ax2.set_title(f'First Image Patch ({patch_size}x{patch_size})')
+    ax2.set_title(f'Ground Truth Patch ({patch_size}x{patch_size})')
     ax2.axis('off')
     
     # Second image and its patch
@@ -77,11 +77,11 @@ def show_and_save_two_images_with_zoomed_patches(image_path1, image_path2, outpu
     ax3.add_patch(Rectangle((start_col2, start_row2), 
                           patch_size, patch_size,
                           fill=False, color='red', linewidth=2))
-    ax3.set_title('Second Image (128x128)')
+    ax3.set_title('Rendered Image (128x128)')
     ax3.axis('off')
     
     ax4.imshow(patch2, cmap='gray', interpolation='nearest')
-    ax4.set_title(f'Second Image Patch ({patch_size}x{patch_size})')
+    ax4.set_title(f'Rendered Image Patch ({patch_size}x{patch_size})')
     ax4.axis('off')
     
     plt.tight_layout()
