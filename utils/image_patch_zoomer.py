@@ -7,6 +7,7 @@ import os
 def show_and_save_two_images_with_zoomed_patches(image_path1, image_path2, output_dir="output", patch_size=32, figsize=(12, 12)):
     """
     Display and save two grayscale images with their zoomed-in views of selected patches.
+    Also saves separate images showing the bounding boxes.
     
     Args:
         image_path1: Path to the first input image
@@ -32,11 +33,23 @@ def show_and_save_two_images_with_zoomed_patches(image_path1, image_path2, outpu
         patch = img_array[start_row:start_row+patch_size, 
                          start_col:start_col+patch_size]
         
-        # Save individual images
+        # Save full image and patch
         Image.fromarray(img_array).save(
             os.path.join(output_dir, f'full_image_{index}.png'))
         Image.fromarray(patch).save(
             os.path.join(output_dir, f'zoomed_patch_{index}.png'))
+        
+        # Create and save image with bounding box
+        fig_box, ax_box = plt.subplots(figsize=(6, 6))
+        ax_box.imshow(img_array, cmap='gray')
+        ax_box.add_patch(Rectangle((start_col, start_row), 
+                                 patch_size, patch_size,
+                                 fill=False, color='red', linewidth=2))
+        ax_box.axis('off')
+        fig_box.tight_layout(pad=0)
+        fig_box.savefig(os.path.join(output_dir, f'image_with_box_{index}.png'), 
+                       bbox_inches='tight', dpi=300, pad_inches=0)
+        plt.close(fig_box)
         
         return img_array, patch, start_row, start_col
     
@@ -44,7 +57,7 @@ def show_and_save_two_images_with_zoomed_patches(image_path1, image_path2, outpu
     img_array1, patch1, start_row1, start_col1 = process_single_image(image_path1, 1)
     img_array2, patch2, start_row2, start_col2 = process_single_image(image_path2, 2)
     
-    # Create figure with 2x2 grid
+    # Create main figure with 2x2 grid
     fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2, figsize=figsize)
     
     # First image and its patch
@@ -73,7 +86,7 @@ def show_and_save_two_images_with_zoomed_patches(image_path1, image_path2, outpu
     
     plt.tight_layout()
     
-    # Save the comparison visualization
+    # Save the complete comparison visualization
     fig.savefig(os.path.join(output_dir, 'comparison.png'), 
                 bbox_inches='tight', dpi=300)
     
