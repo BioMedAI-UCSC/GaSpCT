@@ -16,6 +16,9 @@ def show_and_save_two_images_with_zoomed_patches(image_path1, image_path2, outpu
         patch_size: Size of the square patch to zoom (default: 32)
         figsize: Size of the figure (default: (12, 12))
     """
+    # Set larger font size for all titles
+    plt.rcParams['font.size'] = 14
+
     # Create output directory if it doesn't exist
     os.makedirs(output_dir, exist_ok=True)
     
@@ -65,11 +68,11 @@ def show_and_save_two_images_with_zoomed_patches(image_path1, image_path2, outpu
     ax1.add_patch(Rectangle((start_col1, start_row1), 
                           patch_size, patch_size,
                           fill=False, color='red', linewidth=2))
-    ax1.set_title('Ground Truth (128x128)')
+    ax1.set_title('Ground Truth Image (128x128)', fontsize=16)
     ax1.axis('off')
     
     ax2.imshow(patch1, cmap='gray', interpolation='nearest')
-    ax2.set_title(f'Ground Truth Patch ({patch_size}x{patch_size})')
+    ax2.set_title(f'Ground Truth Image Patch ({patch_size}x{patch_size})', fontsize=16)
     ax2.axis('off')
     
     # Second image and its patch
@@ -77,11 +80,11 @@ def show_and_save_two_images_with_zoomed_patches(image_path1, image_path2, outpu
     ax3.add_patch(Rectangle((start_col2, start_row2), 
                           patch_size, patch_size,
                           fill=False, color='red', linewidth=2))
-    ax3.set_title('Rendered Image (128x128)')
+    ax3.set_title('Rendered Image (128x128)', fontsize=16)
     ax3.axis('off')
     
     ax4.imshow(patch2, cmap='gray', interpolation='nearest')
-    ax4.set_title(f'Rendered Image Patch ({patch_size}x{patch_size})')
+    ax4.set_title(f'Rendered Image Patch ({patch_size}x{patch_size})', fontsize=16)
     ax4.axis('off')
     
     plt.tight_layout()
@@ -97,8 +100,8 @@ def main():
     Example usage of the function.
     """
     # Replace with your image paths
-    image_path1 = "0_xray0000.png"
-    image_path2 = "rendered00000.png"
+    image_path1 = "image1.png"
+    image_path2 = "image2.png"
     
     # Show images with zoomed patches and save results
     show_and_save_two_images_with_zoomed_patches(image_path1, image_path2)
