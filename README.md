@@ -14,8 +14,9 @@ This repository is heavily based on the Gaussian Splatting repository by INRIA, 
 - [Research Paper](https://repo-sam.inria.fr/fungraph/3d-gaussian-splatting/3d_gaussian_splatting_high.pdf)
 
 ## Project Status
-This project has been accepted for a poster presentation in SPIE Medical Imaging 2025, in San Diego
+This project has been accepted for a poster presentation in SPIE Medical Imaging 2025, in San Diego. 
 
+Please find the dataset we used for validation (digitally reconstructed radiographs and camera poses) in the following Google Drive link: https://drive.google.com/file/d/1z7vDykClopXIX7w9u6LETEo8eh6b2Psd
 
 ### Main Contributors
 - Emmanouil "Manolis" Nikolakakis
